@@ -1,0 +1,7 @@
+//  backend for 
+db= mongodb
+web framework =express.js
+dotenv, pretter
+multer, moongoose, nodemon , cloudinary// upload things images video  
+
+
