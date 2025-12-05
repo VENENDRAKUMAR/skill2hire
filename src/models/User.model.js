@@ -1,6 +1,6 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, {Schema} from "mongoose";
+import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 
 const UserSchema = new Schema(
   {
@@ -27,7 +27,7 @@ const UserSchema = new Schema(
       required: true,
       default: "jobseeker",
     },
-    profileimage:{
+    avatar:{
       type:String,
       default:null,
       required:true
@@ -83,4 +83,5 @@ UserSchema.methods.generateRefreshToken = function () {
   );
 };
 
-export default mongoose.model("User", UserSchema);
+export const User = mongoose.model("User", UserSchema);
+

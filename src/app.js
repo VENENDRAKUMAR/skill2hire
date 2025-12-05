@@ -19,6 +19,11 @@ app.use(express.urlencoded({ extended: true, limit: "12kb" }));
 
 
 // Routes
-app.use("/api/users", UserRoute);
+app.use("/register", UserRoute);
+app.use("/login", UserRoute);
+app.use("/profile", UserRoute);
+app.get('/', (req, res) => {
+  res.send('Welcome to the API');
+});
 
 export default app;
