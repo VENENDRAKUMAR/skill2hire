@@ -42,14 +42,28 @@ export const registerUser = asyncHandler(async (req, res) => {
 
   if (exist) throw new ApiError(409, "Email or Username already exists");
 
-  const avatarPath = req.file?.path;
+  // ---------------------------
+  // Multer fields
+  // ---------------------------
+  const avatarPath = req.files?.avatar?.[0]?.path || null;
+  const coverImagePath = req.files?.coverImage?.[0]?.path || null;
+
   let avatarUrl = "";
+  let coverImageUrl = "";
 
   if (avatarPath) {
-    const uploaded = await uploadcloudinary(avatarPath, "avatars");
+    const uploaded = await uploadcloudinary(avatarPath);
     avatarUrl = uploaded.url;
   }
 
+  if (coverImagePath) {
+    const uploaded = await uploadcloudinary(coverImagePath);
+    coverImageUrl = uploaded.url;
+  }
+
+  // ---------------------------
+  // Create user
+  // ---------------------------
   const user = await User.create({
     fullName,
     email,
@@ -57,6 +71,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     role,
     password,
     avatar: avatarUrl,
+    coverImage: coverImageUrl
   });
 
   const created = await User.findById(user._id).select("-password -refreshToken");
@@ -65,6 +80,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     .status(201)
     .json(new ApiResponse(200, created, "User Registered Successfully"));
 });
+
 
 // ----------------------------------------------
 // LOGIN USER
