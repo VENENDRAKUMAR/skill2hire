@@ -1,23 +1,22 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyToken } from ".././lib/auth";
+import { getToken } from "next-auth/jwt";
 
-export function middleware(req: NextRequest) {
-  const payload = verifyToken(req);
+export async function middleware(req: NextRequest) {
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
 
-  // Agar token missing hai → login pe bhej do
-  if (!payload) {
+  if (!token) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  const { role, email } = payload as any;
+  const { role } = token as any;
   const pathname = req.nextUrl.pathname;
 
-  // Role-based checks
-  if (pathname.startsWith("/admin")) {
-    if (role !== "ADMIN" || email !== "admin@vbizgro.com") {
-      return NextResponse.redirect(new URL("/unauthorized", req.url));
-    }
+  if (pathname.startsWith("/admin") && role !== "ADMIN") {
+    return NextResponse.redirect(new URL("/unauthorized", req.url));
   }
 
   if (pathname.startsWith("/jobseeker") && role !== "JOBSEEKER") {
@@ -32,11 +31,14 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/unauthorized", req.url));
   }
 
-  // Agar sab sahi hai → request continue kare
   return NextResponse.next();
 }
 
-// Matcher: middleware kin routes pe chalega
 export const config = {
-  matcher: ["/admin/:path*", "/jobseeker/:path*", "/recruiter/:path*", "/mentor/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/jobseeker/:path*",
+    "/recruiter/:path*",
+    "/mentor/:path*",
+  ],
 };

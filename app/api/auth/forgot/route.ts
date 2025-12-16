@@ -1,23 +1,58 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { connectDB } from "@/lib/db";
-import User from "@/models/User";
-import { sendMail } from "@/lib/mail";
+import { connectDB } from "../../../lib/db";
+import User from "../../../models/User";
+import { sendMail, emailTemplates } from "../../../lib/mail";
+export async function POST(req: NextRequest) {
+  try {
+    await connectDB();
 
-export async function POST(req: Request) {
-  await connectDB();
-  const { email } = await req.json();
+    const { email } = await req.json();
 
-  const user = await User.findOne({ email });
-  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (!email) {
+      return NextResponse.json(
+        { error: "Email is required" },
+        { status: 400 }
+      );
+    }
 
-  const token = crypto.randomBytes(32).toString("hex");
-  user.resetToken = token;
-  user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
-  await user.save();
+    const user = await User.findOne({ email: email.toLowerCase() });
 
-  const resetLink = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`;
-  await sendMail(email, "Password Reset", `Click here to reset: ${resetLink}`);
+    // Always return success (security best practice)
+    if (!user) {
+      return NextResponse.json({
+        success: true,
+        message: "If an account exists, you will receive a reset link.",
+      });
+    }
 
-  return NextResponse.json({ message: "Reset email sent" });
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpiry = Date.now() + 3600000; // 1 hour
+
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = new Date(resetTokenExpiry);
+    await user.save();
+
+    // Create reset link
+    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
+
+    // Send email
+    await sendMail(
+      user.email,
+      "Password Reset Request",
+      emailTemplates.passwordReset(user.name, resetLink)
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: "Password reset link sent to your email!",
+    });
+  } catch (error: any) {
+    console.error("❌ Forgot password error:", error);
+    return NextResponse.json(
+      { error: "Something went wrong. Please try again." },
+      { status: 500 }
+    );
+  }
 }

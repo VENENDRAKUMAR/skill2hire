@@ -18,16 +18,34 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const res = await signIn("credentials", {
-      redirect: false,
-      username: form.email,
-      password: form.password
-    });
+  redirect: false,
+  email: form.email,
+  password: form.password,
+});
 
-    if (res?.ok) {
-      router.push("/dashboard"); // Replace with role-based redirect later
-    } else {
-      alert("Invalid credentials. Please try again.");
-    }
+
+   if (res?.ok) {
+  const sessionRes = await fetch("/api/auth/session");
+  const session = await sessionRes.json();
+
+  switch (session?.user?.role) {
+    case "JOBSEEKER":
+      router.push("/jobseeker");
+      break;
+    case "RECRUITER":
+      router.push("/recruiter");
+      break;
+    case "MENTOR":
+      router.push("/mentor");
+      break;
+    case "ADMIN":
+      router.push("/admin");
+      break;
+    default:
+      router.push("/unauthorized");
+  }
+}
+
   };
 
   return (
@@ -45,7 +63,7 @@ export default function LoginPage() {
 
           {/* Google Login */}
           <button
-            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            onClick={() => signIn("google", { callbackUrl: "/" })}
             className="w-full flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-md mb-4 hover:bg-gray-100 transition"
           >
             <FcGoogle className="text-xl" />
