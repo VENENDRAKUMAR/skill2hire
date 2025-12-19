@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-export default function Loader() {
+export default function LoaderAnimation() {
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-gradient-to-br from-amber-50 via-yellow-100 to-yellow-200">
       <motion.div
