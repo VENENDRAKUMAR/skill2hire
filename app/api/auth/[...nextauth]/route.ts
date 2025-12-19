@@ -20,9 +20,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Invalid credentials");
-        }
+        if (!credentials?.email || !credentials?.password) return null;
 
         await connectDB();
 
@@ -30,17 +28,11 @@ export const authOptions: NextAuthOptions = {
           email: credentials.email.toLowerCase(),
         }).select("+password");
 
-        if (!user || !user.password) {
-          throw new Error("Invalid credentials");
-        }
+        if (!user || !user.password) return null;
 
         const isValid = await bcrypt.compare(credentials.password, user.password);
+        if (!isValid) return null;
 
-        if (!isValid) {
-          throw new Error("Invalid credentials");
-        }
-
-        // Update login info
         user.lastLoginAt = new Date();
         user.loginCount += 1;
         await user.save();
@@ -50,13 +42,13 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
-          avatar: user.avatar,
         };
       },
     }),
   ],
 
   callbacks: {
+    /** ✅ GOOGLE SIGN IN */
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         await connectDB();
@@ -64,44 +56,60 @@ export const authOptions: NextAuthOptions = {
         let dbUser = await User.findOne({ email: user.email });
 
         if (!dbUser) {
-          // Create new user
-         dbUser = await User.create({
-  name: user.name,
-  email: user.email,
-  avatar: user.image,
-  role: "JOBSEEKER",
-  provider: "GOOGLE",
-  verified: true,
-});
-          console.log("✅ New user created via Google:", dbUser._id);
-          // Create profile
+          dbUser = await User.create({
+            name: user.name,
+            email: user.email,
+            avatar: user.image,
+            role: "JOBSEEKER",
+            provider: "GOOGLE",
+            verified: true,
+          });
+
           await JobSeekerProfile.create({
             userId: dbUser._id,
-            skills: [],
+            fullName: dbUser.name,
+            email: dbUser.email,
+            skills: "",
           });
         }
 
         user.id = dbUser._id.toString();
-        user.role = dbUser.role;
+        (user as any).role = dbUser.role;
       }
       return true;
     },
 
+    /** ✅ JWT – SINGLE SOURCE OF TRUTH */
     async jwt({ token, user }) {
-  if (user) {
-    token.id = user.id;
-    token.role = (user as any).role;
-    token.email = user.email;
-  }
-  return token;
-}
-,
+      // first login
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+        token.role = (user as any).role;
+      }
+
+      // safety net (prevents 302 loop)
+      if (!token.role && token.email) {
+        await connectDB();
+        const dbUser = await User.findOne({ email: token.email });
+        if (dbUser) token.role = dbUser.role;
+      }
+
+      return token;
+    },
+
+    /** ✅ SESSION */
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as any;
       }
       return session;
+    },
+
+    /** ✅ POST LOGIN REDIRECT */
+    async redirect({ baseUrl }) {
+      return `${baseUrl}/dashboard/jobseeker`;
     },
   },
 
