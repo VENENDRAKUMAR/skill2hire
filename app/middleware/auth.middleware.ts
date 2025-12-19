@@ -12,22 +12,26 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  const { role } = token as any;
+  const role = (token as any).role;
   const pathname = req.nextUrl.pathname;
 
-  if (pathname.startsWith("/admin") && role !== "ADMIN") {
+  // ✅ ADMIN
+  if (pathname.startsWith("/dashboard/admin") && role !== "ADMIN") {
     return NextResponse.redirect(new URL("/unauthorized", req.url));
   }
 
-  if (pathname.startsWith("/jobseeker") && role !== "JOBSEEKER") {
+  // ✅ JOBSEEKER (FIXED)
+  if (pathname.startsWith("/dashboard/jobseeker") && role !== "JOBSEEKER") {
     return NextResponse.redirect(new URL("/unauthorized", req.url));
   }
 
-  if (pathname.startsWith("/recruiter") && role !== "RECRUITER") {
+  // ✅ RECRUITER
+  if (pathname.startsWith("/dashboard/recruiter") && role !== "RECRUITER") {
     return NextResponse.redirect(new URL("/unauthorized", req.url));
   }
 
-  if (pathname.startsWith("/mentor") && role !== "MENTOR") {
+  // ✅ MENTOR
+  if (pathname.startsWith("/dashboard/mentor") && role !== "MENTOR") {
     return NextResponse.redirect(new URL("/unauthorized", req.url));
   }
 
@@ -35,10 +39,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/admin/:path*",
-    "/jobseeker/:path*",
-    "/recruiter/:path*",
-    "/mentor/:path*",
-  ],
+  matcher: ["/dashboard/:path*"],
 };
