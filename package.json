@@ -1,0 +1,42 @@
+{
+  "name": "skill2hire",
+  "version": "1.0.0",
+  "description": "this is my  full backend for skill2 hire ",
+  "keywords": [
+    "eco",
+    "job",
+    "bozard"
+  ],
+  "homepage": "https://github.com/VENENDRAKUMAR/skill2hire#readme",
+  "bugs": {
+    "url": "https://github.com/VENENDRAKUMAR/skill2hire/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VENENDRAKUMAR/skill2hire.git"
+  },
+  "license": "ISC",
+  "author": "venedrakumar",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.8.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^9.0.0",
+    "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11",
+    "prettier": "^3.7.2"
+  }
+}
