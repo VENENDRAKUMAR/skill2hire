@@ -23,7 +23,7 @@ const UserSchema = new Schema<IUser>(
       default: "JOBSEEKER",
     },
     verified: { type: Boolean, default: false },
-    avatar: String,
+    avatar: String,// cloudinary URL
     provider: {
       type: String,
       enum: ["CREDENTIALS", "GOOGLE"],

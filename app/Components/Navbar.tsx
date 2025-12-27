@@ -32,16 +32,16 @@ const NavBar = () => {
     <div className="h-24 w-full flex items-center justify-between px-6 md:px-12 bg-amber-50 font-sans relative z-50 border-b border-amber-200 shadow-sm">
       {/* Logo */}
       <Link href="/" className="text-2xl font-extrabold tracking-tight text-gray-900">
-        jobboard
+    Skill 2 Hire 
       </Link>
 
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center gap-8">
         <ul className="flex gap-6 text-sm md:text-base font-medium text-gray-800">
-          <li><Link href="/talent" className="hover:text-amber-600 transition">Talent</Link></li>
-          <li><Link href="/mentors" className="hover:text-amber-600 transition">Mentors</Link></li>
-          <li><Link href="/recruiters" className="hover:text-amber-600 transition">Recruiters</Link></li>
-          <li><Link href="/jobs" className="hover:text-amber-600 transition">Jobs</Link></li>
+          <li><Link href="/telent" className="hover:text-amber-600 transition">Telent</Link></li>
+          <li><Link href="/mentor" className="hover:text-amber-600 transition">Mentors</Link></li>
+          <li><Link href="/Recruiters" className="hover:text-amber-600 transition">Recruiters</Link></li>
+          <li><Link href="/Jobs" className="hover:text-amber-600 transition">Jobs</Link></li>
         </ul>
 
         {/* Action Buttons */}

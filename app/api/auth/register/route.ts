@@ -9,6 +9,7 @@ import { sendMail, emailTemplates } from "../../../lib/mail";
 
 export async function POST(req: NextRequest) {
   try {
+    // database connection
     await connectDB();
 
     const { name, email, password, role } = await req.json();
