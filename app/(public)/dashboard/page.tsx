@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { authOptions } from "../api/auth/[...nextauth]/route";
+import { authOptions } from "../../api/auth/[...nextauth]/route";
 
 export default async function DashboardRedirect() {
   const session = await getServerSession(authOptions);
@@ -19,8 +19,7 @@ export default async function DashboardRedirect() {
     case "MENTOR":
       redirect("/dashboard/mentor");
 
-    case "ADMIN":
-      redirect("/dashboard/admin");
+
 
     default:
       redirect("/login");

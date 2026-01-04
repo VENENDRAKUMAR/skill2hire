@@ -14,16 +14,23 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>(
   {
-    name: { type: String, required: true },
-    email: { type: String, unique: true, required: true },
+    name: { type: String, required: true, trim: true },
+    email: { 
+      type: String, 
+      unique: true, 
+      required: true, 
+      lowercase: true, 
+      trim: true 
+    },
     password: { type: String, select: false },
     role: {
       type: String,
       enum: ["JOBSEEKER", "RECRUITER", "MENTOR", "ADMIN"],
       default: "JOBSEEKER",
+      index: true, // Role based search fast karne ke liye
     },
     verified: { type: Boolean, default: false },
-    avatar: String,// cloudinary URL
+    avatar: { type: String, default: "" },
     provider: {
       type: String,
       enum: ["CREDENTIALS", "GOOGLE"],
@@ -35,5 +42,7 @@ const UserSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-export default mongoose.models.User ||
-  mongoose.model<IUser>("User", UserSchema);
+// Scale optimization: Compound index for common queries
+UserSchema.index({ email: 1, role: 1 });
+
+export default mongoose.models.User || mongoose.model<IUser>("User", UserSchema);

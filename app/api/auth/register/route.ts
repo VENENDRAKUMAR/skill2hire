@@ -2,111 +2,61 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { connectDB } from "../../../lib/db";
 import User from "../../../models/User";
-import Jobseeker from "@/app/models/Jobseeker";
+import Jobseeker from "../../../models/Jobseeker"; // Path sahi kar lena
 import RecruiterProfile from "../../../models/RecruiterProfile";
-import MentorProfile  from  "../../../models/Mentorprofile";
-import { sendMail, emailTemplates } from "../../../lib/mail";
+import MentorProfile from "../../../models/Mentorprofile";
+import { sendMail } from "../../../lib/mail"; // 👈 Real mail helper
 
 export async function POST(req: NextRequest) {
   try {
-    // database connection
     await connectDB();
-
     const { name, email, password, role } = await req.json();
 
-    // Validation
+    // 1. Basic Validation
     if (!name || !email || !password || !role) {
-      return NextResponse.json(
-        { error: "All fields are required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Oye! Saare fields bharo pehle." }, { status: 400 });
     }
 
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: "Password must be at least 6 characters" },
-        { status: 400 }
-      );
-    }
-
-    if (!["JOBSEEKER", "RECRUITER", "MENTOR"].includes(role)) {
-      return NextResponse.json(
-        { error: "Invalid role" },
-        { status: 400 }
-      );
-    }
-
-    // Check if user exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    // 2. Check existing user
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
     if (existingUser) {
-      return NextResponse.json(
-        { error: "User with this email already exists. Please login." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Email pehle se register hai bhai!" }, { status: 400 });
     }
 
-    // Hash password
+    // 3. Hash Password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
+    // 4. Create User
     const user = await User.create({
-      name,
-      email: email.toLowerCase(),
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
       password: hashedPassword,
       role,
       provider: "CREDENTIALS",
     });
 
-    console.log("✅ User created:", user._id);
-
-    // Create role-specific profile
-    if (role === "JOBSEEKER") {
-      await Jobseeker.create({
-        userId: user._id,
-        skills: [],
-      });
-    } else if (role === "RECRUITER") {
-      await RecruiterProfile.create({
-        userId: user._id,
-        companyName: "Not Set",
-      });
-    } else if (role === "MENTOR") {
-      await MentorProfile.create({
-        userId: user._id,
-        expertise: [],
-        yearsExperience: 0,
-      });
-    }
-
-    // Send welcome email
+    // 5. Create Role-Specific Profile (Scalable way)
     try {
-      await sendMail(
-        user.email,
-        "Welcome to JobBoard!",
-        emailTemplates.welcome(user.name, user.role)
-      );
-    } catch (err) {
-      console.error("Email failed:", err);
+      if (role === "JOBSEEKER") {
+        await Jobseeker.create({ userId: user._id, skills: [] });
+      } else if (role === "RECRUITER") {
+        await RecruiterProfile.create({ userId: user._id, companyName: "Pending Update" });
+      } else if (role === "MENTOR") {
+        await MentorProfile.create({ userId: user._id, expertise: [], yearsExperience: 0 });
+      }
+    } catch (profileErr) {
+      console.error("Profile Creation Failed:", profileErr);
+      // Optional: User delete kar sakte ho agar profile must hai
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Registration successful! Please login.",
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        },
-      },
-      { status: 201 }
-    );
+    // 6. Send Welcome Email (Non-blocking)
+    sendMail(user.email, "Welcome to Skill2Hire!", `Hi ${user.name}, your account as ${user.role} is ready!`)
+      .catch(err => console.log("Mail error ignored for now"));
+
+    return NextResponse.json({ success: true, message: "Mubarak ho! Registration ho gaya." }, { status: 201 });
+
   } catch (error: any) {
-    console.error("❌ Registration error:", error);
-    return NextResponse.json(
-      { error: "Registration failed. Please try again." },
-      { status: 500 }
-    );
+    console.error("❌ Registration Error:", error);
+    return NextResponse.json({ error: "Kuch toh phat gaya backend pe." }, { status: 500 });
   }
 }
